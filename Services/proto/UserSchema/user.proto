@@ -1,9 +1,9 @@
 syntax="proto3";
-option go_package = "github.com/adadesions/POC-Microservices/proto";
+option go_package = "github.com/adadesions/POC-Microservices/Services/proto/UserSchema";
 
 package proto;
 
-message profile {
+message Profile {
     string fullname = 1;
     string password = 2;
     string email = 3;
@@ -11,12 +11,12 @@ message profile {
     bool createdDate = 5;
 }
 
-message token {
+message Token {
     string username = 1;
     string password = 2;
 }
 
 service Registration {
-    rpc createNewUser(profile) returns (profile) {}
-    rpc login(token) returns (profile) {}
+    rpc CreateNewUser(Profile) returns (Profile) {}
+    rpc Login(Token) returns (Profile) {}
 }
