@@ -5,7 +5,7 @@ import (
 	"log"
 	"net"
 
-	pb "github.com/adadesions/POC-Microservices/Services/proto"
+	pb "github.com/CleanCoders9229/POC-Microservices/Services/proto/UserSchema"
 	"google.golang.org/grpc"
 )
 
