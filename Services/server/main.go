@@ -5,7 +5,7 @@ import (
 	"log"
 	"net"
 
-	pb "github.com/CleanCoders9229/POC-Microservices/Services/proto"
+	pb "github.com/CleanCoders9229/POC-Microservices/Services/proto/UserSchema"
 	"google.golang.org/grpc"
 )
 
@@ -20,7 +20,7 @@ type server struct {
 func (s *server) CreateNewUser(ctx context.Context, in *pb.Profile) (*pb.Profile, error) {
 	log.Printf("Receivee from client (CreateNewUser): %v.", in.Fullname)
 
-	return &pb.Profile{Fullname: in.GetFullname(), Password: "", Email: in.GetEmail(), isActivated: true, CreatedDate: true}, nil
+	return &pb.Profile{Fullname: in.GetFullname(), Password: "", Email: in.GetEmail(), IsActivated: true, CreatedDate: true}, nil
 }
 
 func main() {
