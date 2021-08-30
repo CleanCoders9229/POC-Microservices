@@ -1,0 +1,16 @@
+syntax="proto3";
+option go_package = "github.com/adadesions/POC-Microservices/proto";
+
+package proto;
+
+message profile {
+    string username = 1;
+    string password = 2;
+    string email = 3;
+    bool isActivated = 4;
+    bool createdDate = 5;
+}
+
+service Registration {
+    rpc createNewUser(profile) returns (profile) {}
+}
