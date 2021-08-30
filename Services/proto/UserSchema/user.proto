@@ -1,5 +1,5 @@
 syntax="proto3";
-option go_package = "github.com/adadesions/POC-Microservices/Services/proto/UserSchema";
+option go_package = "github.com/adadesions/POC-Microservices/Services/proto";
 
 package proto;
 
