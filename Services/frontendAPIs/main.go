@@ -2,28 +2,40 @@ package main
 
 import (
 	"context"
+	"flag"
 	"log"
 	"time"
 
 	pb "github.com/CleanCoders9229/POC-Microservices/Services/proto/UserSchema"
+	"github.com/gin-gonic/gin"
 	"google.golang.org/grpc"
 )
 
 const (
-	ginPort       = ":3000"
-	ServerAddress = "localhost:50051"
+	ginPortDefault  = ":3000"
+	grpcAddrDefault = "localhost:50051"
 )
 
 func main() {
+	// Flags Parser
+	grpcAddr := flag.String("grpcAddr", grpcAddrDefault, "gRPC Address and Port.")
+	ginPort := flag.String("ginPort", ginPortDefault, "Gin Server Port.")
+	flag.Parse()
+
 	// gRPC
-	conn, err := grpc.Dial(ServerAddress, grpc.WithInsecure(), grpc.WithBlock())
+	conn, err := grpc.Dial(*grpcAddr, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		log.Fatalf("gRPC connection error: %v", err)
 	}
+
+	log.Printf("gRPC Open to: %v", *grpcAddr)
 	defer conn.Close()
 	manager := pb.NewRegistrationClient(conn)
 
-	for true {
+	// GIN Server
+	router := gin.Default()
+
+	for i := 0; i < 2; i++ {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 		defer cancel()
 		req := &pb.Profile{
@@ -41,8 +53,6 @@ func main() {
 		}
 
 		log.Printf("Server response: %s", res.String())
+		time.Sleep(time.Second)
 	}
-
-	time.Sleep(2 * time.Second)
-
 }
