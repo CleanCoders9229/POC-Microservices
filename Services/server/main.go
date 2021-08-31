@@ -18,7 +18,7 @@ type server struct {
 }
 
 func (s *server) CreateNewUser(ctx context.Context, in *pb.Profile) (*pb.Profile, error) {
-	log.Printf("Received from client (CreateNewUser): %v.", in.GetFullname())
+	log.Printf("Received from client (CreateNewUser): %v.", in.String())
 
 	return &pb.Profile{Fullname: in.GetFullname(), Password: "", Email: in.GetEmail(), IsActivated: true, CreatedDate: true}, nil
 }

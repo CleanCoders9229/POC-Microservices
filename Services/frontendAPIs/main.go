@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"log"
+	"net/http"
 	"time"
 
 	pb "github.com/CleanCoders9229/POC-Microservices/Services/proto/UserSchema"
@@ -12,9 +13,68 @@ import (
 )
 
 const (
-	ginPortDefault  = ":3000"
+	ginPortDefault  = ":8000"
 	grpcAddrDefault = "localhost:50051"
 )
+
+type User struct {
+	Email    string `form:"email" json:"email" xml:"email" binding:"required"`
+	Fullname string `form:"fullname" json:"fullname" xml:"fullname"  binding:"required"`
+	Password string `form:"password" json:"password" xml:"password" binding:"required"`
+}
+
+func CORSMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Header("Access-Control-Allow-Origin", "*")
+		c.Header("Access-Control-Allow-Credentials", "true")
+		c.Header("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
+		c.Header("Access-Control-Allow-Methods", "POST,HEAD,PATCH, OPTIONS, GET, PUT")
+
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
+			return
+		}
+
+		c.Next()
+	}
+}
+
+func userRegister(c *gin.Context, conn *grpc.ClientConn) {
+	var user User
+
+	if err := c.ShouldBind(&user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// gRPC Req and Res
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	req := &pb.Profile{
+		Fullname:    user.Fullname,
+		Password:    user.Password,
+		Email:       user.Email,
+		IsActivated: false,
+		CreatedDate: false,
+	}
+
+	manager := pb.NewRegistrationClient(conn)
+	res, err := manager.CreateNewUser(ctx, req)
+
+	if err != nil {
+		log.Fatalf("Response Error: %v", err)
+	}
+
+	log.Printf("Server response: %s", res.String())
+
+	// Gin Response
+	c.JSON(200, gin.H{
+		"status":   "posted",
+		"email":    user.Email,
+		"fullname": user.Fullname,
+		"password": user.Password,
+	})
+}
 
 func main() {
 	// Flags Parser
@@ -30,29 +90,12 @@ func main() {
 
 	log.Printf("gRPC Open to: %v", *grpcAddr)
 	defer conn.Close()
-	manager := pb.NewRegistrationClient(conn)
 
 	// GIN Server
 	router := gin.Default()
-
-	for i := 0; i < 2; i++ {
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-		defer cancel()
-		req := &pb.Profile{
-			Fullname:    "Ada De Sions",
-			Password:    "1234",
-			Email:       "ada@adacode.com",
-			IsActivated: false,
-			CreatedDate: false,
-		}
-
-		res, err := manager.CreateNewUser(ctx, req)
-
-		if err != nil {
-			log.Fatalf("Response Error: %v", err)
-		}
-
-		log.Printf("Server response: %s", res.String())
-		time.Sleep(time.Second)
-	}
+	router.Use(CORSMiddleware())
+	router.POST("/user/register", func(c *gin.Context) {
+		userRegister(c, conn)
+	})
+	router.Run(*ginPort)
 }
