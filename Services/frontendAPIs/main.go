@@ -57,23 +57,26 @@ func userRegister(c *gin.Context, conn *grpc.ClientConn) {
 		IsActivated: false,
 		CreatedDate: false,
 	}
-
 	manager := pb.NewRegistrationClient(conn)
+
+	// Firebase Auth - Create New User
 	res, err := manager.CreateNewUser(ctx, req)
 
 	if err != nil {
-		log.Fatalf("Response Error: %v", err)
+		log.Printf("Response Error from Firebase: %v", err)
+		c.JSON(400, gin.H{})
+	} else {
+		log.Printf("Server response: %s", res.String())
+
+		// Gin Response
+		c.JSON(200, gin.H{
+			"status":   "posted",
+			"email":    user.Email,
+			"fullname": user.Fullname,
+			"password": user.Password,
+		})
 	}
 
-	log.Printf("Server response: %s", res.String())
-
-	// Gin Response
-	c.JSON(200, gin.H{
-		"status":   "posted",
-		"email":    user.Email,
-		"fullname": user.Fullname,
-		"password": user.Password,
-	})
 }
 
 func main() {
