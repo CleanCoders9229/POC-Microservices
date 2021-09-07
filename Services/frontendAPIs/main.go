@@ -48,7 +48,7 @@ func userRegister(c *gin.Context, conn *grpc.ClientConn) {
 	}
 
 	// gRPC Req and Res
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	req := &pb.Profile{
 		Fullname:    user.Fullname,
@@ -71,9 +71,10 @@ func userRegister(c *gin.Context, conn *grpc.ClientConn) {
 	// Gin Response
 	c.JSON(200, gin.H{
 		"status":   "posted",
-		"email":    user.Email,
-		"fullname": user.Fullname,
-		"password": user.Password,
+		"email":    res.Email,
+		"fullname": res.Fullname,
+		"password": res.Password,
+		"nextURL":  "/SingleLoginPage",
 	})
 
 }

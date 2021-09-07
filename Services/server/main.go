@@ -42,18 +42,17 @@ func (s *server) CreateNewUser(ctx context.Context, in *pb.Profile) (*pb.Profile
 
 	userProfile := &pb.Profile{Fullname: in.GetFullname(), Password: "****", Email: in.GetEmail(), IsActivated: true, CreatedDate: true}
 
-	_, status := client.CreateUser(ctx, params)
-	if status == context.DeadlineExceeded {
-		log.Printf("Successfully created user: %v\n", userProfile.String())
-
-	} else {
+	_, err = client.CreateUser(ctx, params)
+	if err != nil {
+		log.Printf("========================================")
 		log.Printf("Response from creating user: %v\n", err)
-		log.Printf("==========")
-		log.Println(status)
-		return nil, status
-
+		log.Printf("========================================")
+		log.Println(err)
+		log.Printf("========================================")
+		return nil, err
 	}
 
+	log.Printf("Successfully created user: %v\n", userProfile.String())
 	return userProfile, nil
 }
 

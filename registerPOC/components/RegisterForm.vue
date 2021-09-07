@@ -70,11 +70,12 @@ export default {
     };
   },
   methods: {
-    submitForm() {
-      axios
+    async submitForm() {
+      await axios
         .post("http://localhost:8000/user/register", this.form)
         .then((res) => {
           console.log(res);
+          window.location = res.data.nextURL
         })
         .catch((error) => {
           console.log("Error: ", error);
