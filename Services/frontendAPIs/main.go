@@ -91,7 +91,7 @@ func userRegister(c *gin.Context, conn *grpc.ClientConn) {
 func userLogin(c *gin.Context, conn *grpc.ClientConn) {
 	type Token struct {
 		Username string `form:"username" json:"username" binding:"required"`
-		Password string `form:"username" json:"password" binding:"required"`
+		Password string `form:"password" json:"password" binding:"required"`
 	}
 
 	var inToken Token
