@@ -8,6 +8,7 @@ import (
 	firebase "firebase.google.com/go"
 	"firebase.google.com/go/auth"
 	pb "github.com/CleanCoders9229/POC-Microservices/Services/proto/UserSchema"
+	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/api/option"
 	"google.golang.org/grpc"
 )
@@ -54,6 +55,29 @@ func (s *server) CreateNewUser(ctx context.Context, in *pb.Profile) (*pb.Profile
 
 	log.Printf("Successfully created user: %v\n", userProfile.String())
 	return userProfile, nil
+}
+
+func CheckPasswordHash(password, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
+}
+
+func (s *server) Login(ctx context.Context, in *pb.Token) (*pb.Profile, error) {
+	log.Println("========== Received From Login ==========")
+	log.Println(in.String())
+	log.Println("====================")
+	log.Printf("isMatch: %v\n", CheckPasswordHash("123456", in.GetPassword()))
+	log.Println("====================")
+
+	profile := &pb.Profile{
+		Fullname:    in.GetUsername(),
+		Password:    in.GetPassword(),
+		Email:       in.GetUsername(),
+		IsActivated: true,
+		CreatedDate: true,
+	}
+
+	return profile, nil
 }
 
 func main() {

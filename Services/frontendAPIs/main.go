@@ -9,6 +9,7 @@ import (
 
 	pb "github.com/CleanCoders9229/POC-Microservices/Services/proto/UserSchema"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/grpc"
 )
 
@@ -21,6 +22,14 @@ type User struct {
 	Email    string `form:"email" json:"email" xml:"email" binding:"required"`
 	Fullname string `form:"fullname" json:"fullname" xml:"fullname"  binding:"required"`
 	Password string `form:"password" json:"password" xml:"password" binding:"required"`
+}
+
+func HashPassword(password string) string {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	if err != nil {
+		log.Printf("Error at Hasing password: %v", err)
+	}
+	return string(bytes)
 }
 
 func CORSMiddleware() gin.HandlerFunc {
@@ -79,6 +88,42 @@ func userRegister(c *gin.Context, conn *grpc.ClientConn) {
 
 }
 
+func userLogin(c *gin.Context, conn *grpc.ClientConn) {
+	type Token struct {
+		Username string `form:"username" json:"username" binding:"required"`
+		Password string `form:"username" json:"password" binding:"required"`
+	}
+
+	var inToken Token
+
+	if err := c.ShouldBind(&inToken); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	token := &pb.Token{
+		Username: inToken.Username,
+		Password: HashPassword(inToken.Password),
+	}
+
+	manager := pb.NewRegistrationClient(conn)
+
+	res, err := manager.Login(ctx, token)
+
+	if err != nil {
+		log.Printf("Service Response Error: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+
+	log.Printf("Service Response: %v", res.String())
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "login success",
+		"nextURL": "/profile",
+	})
+}
+
 func main() {
 	// Flags Parser
 	grpcAddr := flag.String("grpcAddr", grpcAddrDefault, "gRPC Address and Port.")
@@ -100,5 +145,10 @@ func main() {
 	router.POST("/user/register", func(c *gin.Context) {
 		userRegister(c, conn)
 	})
+
+	router.POST("/user/login", func(c *gin.Context) {
+		userLogin(c, conn)
+	})
+
 	router.Run(*ginPort)
 }
